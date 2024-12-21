@@ -1,0 +1,12 @@
+[
+{"id": 1, "custName": "Cust1", "walletAmount": 50000, "walletAmountBlocked": 0},
+{"id": 2, "custName": "Cust2", "walletAmount": 10000, "walletAmountBlocked": 0},
+{"id": 3, "custName": "Cust3", "walletAmount": 20000, "walletAmountBlocked": 0},
+{"id": 4, "custName": "Cust4", "walletAmount": 35000, "walletAmountBlocked": 0},
+{"id": 5, "custName": "Cust5", "walletAmount": 40000, "walletAmountBlocked": 0},
+{"id": 6, "custName": "Cust6", "walletAmount": 1000, "walletAmountBlocked": 0},
+{"id": 7, "custName": "Cust7", "walletAmount": 10000, "walletAmountBlocked": 0},
+{"id": 8, "custName": "Cust8", "walletAmount": 10000, "walletAmountBlocked": 0},
+{"id": 9, "custName": "Cust9", "walletAmount": 20000, "walletAmountBlocked": 0},
+{"id": 10, "custName": "Cust10", "walletAmount": 20000, "walletAmountBlocked": 0}
+]

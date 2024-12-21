@@ -1,0 +1,12 @@
+[
+{"id": 1, "prodName": "Product1", "productAvailable": 1000, "productBlocked": 0},
+{"id": 2, "prodName": "Product2", "productAvailable": 100, "productBlocked": 0},
+{"id": 3, "prodName": "Product3", "productAvailable": 500, "productBlocked": 0},
+{"id": 4, "prodName": "Product4", "productAvailable": 200, "productBlocked": 0},
+{"id": 5, "prodName": "Product5", "productAvailable": 1000, "productBlocked": 0},
+{"id": 6, "prodName": "Product6", "productAvailable": 100, "productBlocked": 0},
+{"id": 7, "prodName": "Product7", "productAvailable": 100, "productBlocked": 0},
+{"id": 8, "prodName": "Product8", "productAvailable": 200, "productBlocked": 0},
+{"id": 9, "prodName": "Product9", "productAvailable": 300, "productBlocked": 0},
+{"id": 10, "prodName": "Product10", "productAvailable": 500, "productBlocked": 0}
+]
