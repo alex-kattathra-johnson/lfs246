@@ -35,11 +35,11 @@ func (os OrderStatus) String() string {
 }
 
 type OrderDetails struct {
-	Id                  uint        `json:"id"`
-	CustomerId          uint        `json:"custId"`
-	ProductId           uint        `json:"prodId"`
-	Amount              uint        `json:"amount"`
-	ProductCount        uint        `json:"prodCount"`
+	Id                  string      `json:"id"`
+	CustomerId          string      `json:"custId"`
+	ProductId           string      `json:"prodId"`
+	Amount              int         `json:"amount"`
+	ProductCount        int         `json:"prodCount"`
 	ProductOrderStatus  OrderStatus `json:"product_order_status"`
 	CustomerOrderStatus OrderStatus `json:"customer_order_status"`
 	OrderStatus         OrderStatus `json:"order_status"`

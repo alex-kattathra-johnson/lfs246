@@ -5,21 +5,42 @@ import (
 	"errors"
 	"net/http"
 	"os"
-	"sync"
 
 	"github.com/alex-kattathra-johnson/lfs246/utils"
+	badger "github.com/dgraph-io/badger/v4"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 )
 
-var productDetailsRepo sync.Map
+var productDetailsRepo *badger.DB
 
 func init() {
+	opt := badger.DefaultOptions("").WithInMemory(true)
+	db, err := badger.Open(opt)
+	if err != nil {
+		log.Fatalf("could not create database: %s", err)
+	}
+	productDetailsRepo = db
+
 	data, _ := os.ReadFile("/data.json")
 	var products []utils.ProductDetails
-	json.Unmarshal(data, &products)
-	for _, p := range products {
-		productDetailsRepo.Store(p.Id, p)
+	if err := json.Unmarshal(data, &products); err != nil {
+		log.Fatalf("could not load customers: %s", err)
+	}
+
+	if err := productDetailsRepo.Update(func(txn *badger.Txn) error {
+		for _, c := range products {
+			data, err := json.Marshal(c)
+			if err != nil {
+				return err
+			}
+			if err := txn.Set([]byte(c.Id), data); err != nil {
+				return err
+			}
+		}
+		return nil
+	}); err != nil {
+		log.Fatalf("could not load customers: %s", err)
 	}
 }
 
@@ -40,25 +61,45 @@ func block(c *gin.Context) {
 	log.Infof("product-service :: Order Details :: %s", od)
 	log.Infof("product-service :: Order Status :: %s", od.OrderStatus)
 
-	data, ok := productDetailsRepo.Load(od.ProductId)
-	if !ok {
-		c.AbortWithError(http.StatusNotFound, errors.New("product not found"))
+	if err := productDetailsRepo.Update(func(txn *badger.Txn) error {
+		item, err := txn.Get([]byte(od.ProductId))
+		if err != nil {
+			c.AbortWithError(http.StatusNotFound, errors.New("product not found"))
+			return nil
+		}
+
+		var data []byte
+		if err := item.Value(func(val []byte) error {
+			data = append([]byte{}, val...)
+			return nil
+		}); err != nil {
+			return err
+		}
+
+		var product utils.ProductDetails
+		if err := json.Unmarshal(data, &product); err != nil {
+			return err
+		}
+
+		switch od.OrderStatus {
+		case utils.ORDERSTATUS_NEW:
+			product.ProductBlocked += int(od.ProductCount)
+			product.ProductAvailable -= int(od.ProductCount)
+			od.OrderStatus = utils.ORDERSTATUS_PRODUCT_CONFIRMED
+			od.ConfirmOrder()
+		case utils.ORDERSTATUS_CONFIRMED:
+			product.ProductBlocked -= int(od.ProductCount)
+		}
+
+		data, err = json.Marshal(product)
+		if err != nil {
+			return err
+		}
+
+		log.Infof("product-service :: Order details :: %s", product)
+		return txn.Set([]byte(product.Id), data)
+	}); err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
-
-	product := data.(utils.ProductDetails)
-
-	switch od.OrderStatus {
-	case utils.ORDERSTATUS_NEW:
-		product.ProductBlocked += int(od.ProductCount)
-		product.ProductAvailable -= int(od.ProductCount)
-		od.OrderStatus = utils.ORDERSTATUS_PRODUCT_CONFIRMED
-		productDetailsRepo.Store(od.ProductId, product)
-		od.ConfirmOrder()
-	case utils.ORDERSTATUS_CONFIRMED:
-		product.ProductBlocked -= int(od.ProductCount)
-		productDetailsRepo.Store(od.ProductId, product)
-	}
-
-	log.Infof("product-service :: Order details :: %s", product)
 }

@@ -3,7 +3,7 @@ package utils
 import "encoding/json"
 
 type CustomerDetails struct {
-	Id                  uint   `json:"id"`
+	Id                  string `json:"id"`
 	CustomerName        string `json:"custName"`
 	WalletAmount        int    `json:"walletAmount"`
 	WalletAmountBlocked int    `json:"walletAmountBlocked"`

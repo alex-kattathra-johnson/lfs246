@@ -1,17 +1,27 @@
 package main
 
 import (
+	"encoding/json"
 	"net/http"
 	"os"
-	"sync"
 
 	"github.com/alex-kattathra-johnson/lfs246/utils"
+	badger "github.com/dgraph-io/badger/v4"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	log "github.com/sirupsen/logrus"
 )
 
-var orderDetailsRepo sync.Map
+var orderDetailsRepo *badger.DB
+
+func init() {
+	opt := badger.DefaultOptions("").WithInMemory(true)
+	db, err := badger.Open(opt)
+	if err != nil {
+		log.Fatalf("could not create database: %s", err)
+	}
+	orderDetailsRepo = db
+}
 
 func main() {
 	r := gin.Default()
@@ -34,7 +44,16 @@ func placeOrder(c *gin.Context) {
 	log.Infof("order-service :: Order Status in Request :: %s", od.OrderStatus)
 
 	if od.OrderStatus == utils.ORDERSTATUS_NEW {
-		orderDetailsRepo.Store(od.Id, od)
+		if err := orderDetailsRepo.Update(func(txn *badger.Txn) error {
+			data, err := json.Marshal(od)
+			if err != nil {
+				return err
+			}
+			return txn.Set([]byte(od.Id), data)
+		}); err != nil {
+			c.AbortWithError(http.StatusInternalServerError, err)
+			return
+		}
 
 		od.CallCustomer()
 		od.CallProduct()
@@ -62,10 +81,24 @@ func confirmOrder(c *gin.Context) {
 	log.Infof("order-service :: Final Order Confirmation :: %s", od)
 	log.Infof("order-service :: Order Status :: %s", od.OrderStatus)
 
-	data, ok := orderDetailsRepo.Load(od.Id)
+	if err := orderDetailsRepo.Update(func(txn *badger.Txn) error {
+		item, err := txn.Get([]byte(od.Id))
+		if err != nil {
+			return err
+		}
 
-	if ok {
-		order := data.(utils.OrderDetails)
+		var data []byte
+		if err := item.Value(func(val []byte) error {
+			data = append([]byte{}, val...)
+			return nil
+		}); err != nil {
+			return err
+		}
+
+		var order utils.OrderDetails
+		if err := json.Unmarshal(data, &order); err != nil {
+			return err
+		}
 
 		switch od.OrderStatus {
 		case utils.ORDERSTATUS_CUSTOMER_CONFIRMED:
@@ -76,14 +109,21 @@ func confirmOrder(c *gin.Context) {
 			order.ProductOrderStatus = od.OrderStatus
 		}
 
-		orderDetailsRepo.Store(od.Id, order)
-
 		if order.CustomerOrderStatus == utils.ORDERSTATUS_CUSTOMER_CONFIRMED && order.ProductOrderStatus == utils.ORDERSTATUS_PRODUCT_CONFIRMED {
 			order.OrderStatus = utils.ORDERSTATUS_CONFIRMED
-			orderDetailsRepo.Store(od.Id, order)
 			order.CallCustomer()
 			order.CallProduct()
 		}
+
+		data, err = json.Marshal(order)
+		if err != nil {
+			return err
+		}
+
+		return txn.Set([]byte(order.Id), data)
+	}); err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
 	}
 
 	c.Header("Content-Type", binding.MIMEPlain)
