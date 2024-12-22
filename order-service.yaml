@@ -16,8 +16,7 @@ spec:
       - env:
         - name: GIN_MODE
           value: release
-        image: kind.local/order-service
-        imagePullPolicy: Never
+        image: localhost:5001/order-service:v0.0.1
         name: ""
         ports:
         - containerPort: 8080

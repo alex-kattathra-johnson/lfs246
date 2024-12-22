@@ -2,7 +2,8 @@ FROM golang:alpine AS builder
 
 ARG SERVICE
 
-COPY . /app
+COPY utils /app/utils
+COPY ${SERVICE} /app/${SERVICE}
 WORKDIR /app/${SERVICE}
 
 RUN go build -o app
