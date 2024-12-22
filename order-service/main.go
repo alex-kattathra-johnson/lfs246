@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"os"
 	"sync"
 
 	"github.com/alex-kattathra-johnson/lfs246/utils"
@@ -28,6 +29,7 @@ func placeOrder(c *gin.Context) {
 		return
 	}
 
+	log.Infof("order-service :: Order Request Received from revision :: %s", os.Getenv("VERSION"))
 	log.Infof("order-service :: Order Request Received :: %s", od)
 	log.Infof("order-service :: Order Status in Request :: %s", od.OrderStatus)
 

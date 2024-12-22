@@ -16,6 +16,8 @@ spec:
       - env:
         - name: GIN_MODE
           value: release
+        - name: VERSION
+          value: v0.0.1
         image: localhost:5001/product-service:v0.0.1
         name: ""
         ports:
