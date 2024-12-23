@@ -55,8 +55,8 @@ func placeOrder(c *gin.Context) {
 			return
 		}
 
-		od.CallCustomer()
-		od.CallProduct()
+		od.SendTo("customer")
+		od.SendTo("product")
 
 		c.JSON(http.StatusAccepted, utils.OrderResponse{
 			Status:        "SUCCESS",
@@ -111,8 +111,8 @@ func confirmOrder(c *gin.Context) {
 
 		if order.CustomerOrderStatus == utils.ORDERSTATUS_CUSTOMER_CONFIRMED && order.ProductOrderStatus == utils.ORDERSTATUS_PRODUCT_CONFIRMED {
 			order.OrderStatus = utils.ORDERSTATUS_CONFIRMED
-			order.CallCustomer()
-			order.CallProduct()
+			order.SendTo("customer")
+			order.SendTo("product")
 		}
 
 		data, err = json.Marshal(order)

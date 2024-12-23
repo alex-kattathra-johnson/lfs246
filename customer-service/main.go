@@ -88,7 +88,7 @@ func blockAmount(c *gin.Context) {
 			customer.WalletAmountBlocked += int(od.Amount)
 			customer.WalletAmount -= int(od.Amount)
 			od.OrderStatus = utils.ORDERSTATUS_CUSTOMER_CONFIRMED
-			od.ConfirmOrder()
+			od.SendTo("order")
 		case utils.ORDERSTATUS_CONFIRMED:
 			customer.WalletAmountBlocked -= int(od.Amount)
 		}

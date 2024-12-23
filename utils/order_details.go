@@ -1,11 +1,14 @@
 package utils
 
 import (
-	"bytes"
+	"context"
 	"encoding/json"
-	"net/http"
+	"log"
 
-	"github.com/gin-gonic/gin/binding"
+	"github.com/IBM/sarama"
+	"github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2"
+	cloudevents "github.com/cloudevents/sdk-go/v2"
+	"github.com/google/uuid"
 )
 
 type OrderStatus int
@@ -45,31 +48,33 @@ type OrderDetails struct {
 	OrderStatus         OrderStatus `json:"order_status"`
 }
 
-func (od OrderDetails) CallCustomer() {
-	data, _ := json.Marshal(od)
-	http.Post(
-		"http://customer-service.default.svc.cluster.local/customers/blockAmount",
-		binding.MIMEJSON,
-		bytes.NewBuffer(data),
-	)
-}
+func (od OrderDetails) SendTo(topic string) {
+	saramaConfig := sarama.NewConfig()
+	saramaConfig.Version = sarama.V2_0_0_0
 
-func (od OrderDetails) CallProduct() {
-	data, _ := json.Marshal(od)
-	http.Post(
-		"http://product-service.default.svc.cluster.local/products/block",
-		binding.MIMEJSON,
-		bytes.NewBuffer(data),
-	)
-}
+	sender, err := kafka_sarama.NewSender([]string{"my-cluster-kafka-bootstrap.kafka:9092"}, saramaConfig, topic)
+	if err != nil {
+		log.Fatalf("failed to create protocol: %s", err.Error())
+	}
 
-func (od OrderDetails) ConfirmOrder() {
-	data, _ := json.Marshal(od)
-	http.Post(
-		"http://order-service.default.svc.cluster.local/orders/confirm",
-		binding.MIMEJSON,
-		bytes.NewBuffer(data),
-	)
+	defer sender.Close(context.Background())
+
+	c, err := cloudevents.NewClient(sender, cloudevents.WithTimeNow(), cloudevents.WithUUIDs())
+	if err != nil {
+		log.Fatalf("failed to create client, %v", err)
+	}
+
+	e := cloudevents.NewEvent()
+	e.SetID(uuid.New().String())
+	e.SetType(od.OrderStatus.String())
+	e.SetSource("http://localhost")
+	if err = e.SetData(cloudevents.ApplicationJSON, od); err != nil {
+		log.Fatalf("failed to set data: %s", err)
+	}
+
+	if result := c.Send(kafka_sarama.WithMessageKey(context.Background(), sarama.StringEncoder(e.ID())), e); cloudevents.IsUndelivered(result) {
+		log.Fatalf("failed to send, %v", result)
+	}
 }
 
 type OrderResponse struct {

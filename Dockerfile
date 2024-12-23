@@ -2,10 +2,14 @@ FROM golang:alpine AS builder
 
 ARG SERVICE
 
-COPY utils /app/utils
-COPY ${SERVICE} /app/${SERVICE}
 WORKDIR /app/${SERVICE}
 
+COPY utils/go.* /app/utils/
+COPY ${SERVICE}/go.* /app/${SERVICE}/
+RUN go mod download
+
+COPY utils /app/utils
+COPY ${SERVICE} /app/${SERVICE}
 RUN go build -o app
 
 FROM scratch
