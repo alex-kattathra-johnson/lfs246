@@ -88,7 +88,7 @@ func block(c *gin.Context) {
 			product.ProductBlocked += int(od.ProductCount)
 			product.ProductAvailable -= int(od.ProductCount)
 			od.OrderStatus = utils.ORDERSTATUS_PRODUCT_CONFIRMED
-			od.ConfirmOrder()
+			od.SendTo("order")
 		case utils.ORDERSTATUS_CONFIRMED:
 			product.ProductBlocked -= int(od.ProductCount)
 		}
