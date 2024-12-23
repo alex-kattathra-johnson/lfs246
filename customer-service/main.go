@@ -30,12 +30,14 @@ func init() {
 
 	if err := customerDetailsRepo.Update(func(txn *badger.Txn) error {
 		for _, c := range customers {
-			data, err := json.Marshal(c)
-			if err != nil {
-				return err
-			}
-			if err := txn.Set([]byte(c.Id), data); err != nil {
-				return err
+			if _, err := txn.Get([]byte(c.Id)); err != nil {
+				data, err := json.Marshal(c)
+				if err != nil {
+					return err
+				}
+				if err := txn.Set([]byte(c.Id), data); err != nil {
+					return err
+				}
 			}
 		}
 		return nil

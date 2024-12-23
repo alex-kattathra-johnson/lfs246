@@ -1,16 +1,10 @@
 apiVersion: serving.knative.dev/v1
 kind: Service
 metadata:
-  creationTimestamp: null
   name: customer-service
   namespace: default
 spec:
   template:
-    metadata:
-      annotations:
-        client.knative.dev/updateTimestamp: "2024-12-21T17:43:25Z"
-        client.knative.dev/user-image: customer-service
-      creationTimestamp: null
     spec:
       containers:
       - env:

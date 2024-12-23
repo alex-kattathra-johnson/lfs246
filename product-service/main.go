@@ -25,22 +25,24 @@ func init() {
 	data, _ := os.ReadFile("/data.json")
 	var products []utils.ProductDetails
 	if err := json.Unmarshal(data, &products); err != nil {
-		log.Fatalf("could not load customers: %s", err)
+		log.Fatalf("could not load products: %s", err)
 	}
 
 	if err := productDetailsRepo.Update(func(txn *badger.Txn) error {
-		for _, c := range products {
-			data, err := json.Marshal(c)
-			if err != nil {
-				return err
-			}
-			if err := txn.Set([]byte(c.Id), data); err != nil {
-				return err
+		for _, p := range products {
+			if _, err := txn.Get([]byte(p.Id)); err != nil {
+				data, err := json.Marshal(p)
+				if err != nil {
+					return err
+				}
+				if err := txn.Set([]byte(p.Id), data); err != nil {
+					return err
+				}
 			}
 		}
 		return nil
 	}); err != nil {
-		log.Fatalf("could not load customers: %s", err)
+		log.Fatalf("could not load products: %s", err)
 	}
 }
 
