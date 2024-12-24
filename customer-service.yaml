@@ -14,8 +14,8 @@ spec:
         - name: GIN_MODE
           value: release
         - name: VERSION
-          value: v0.1.2
-        image: localhost:5001/customer-service:v0.1.2
+          value: v0.2.0
+        image: localhost:5001/customer-service:v0.2.0
         name: ""
         ports:
         - containerPort: 8080

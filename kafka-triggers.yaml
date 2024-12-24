@@ -1,0 +1,47 @@
+apiVersion: eventing.knative.dev/v1
+kind: Trigger
+metadata:
+  name: customer
+spec:
+  broker: default
+  filter: 
+    attributes:
+      subject: "customer"
+  subscriber:
+    ref:
+      apiVersion: serving.knative.dev/v1
+      kind: Service
+      name: customer-service
+    uri: /customers/blockAmount
+---
+apiVersion: eventing.knative.dev/v1
+kind: Trigger
+metadata:
+  name: product
+spec:
+  broker: default
+  filter: 
+    attributes:
+      subject: "product"
+  subscriber:
+    ref:
+      apiVersion: serving.knative.dev/v1
+      kind: Service
+      name: product-service
+    uri: /products/block
+---
+apiVersion: eventing.knative.dev/v1
+kind: Trigger
+metadata:
+  name: order
+spec:
+  broker: default
+  filter: 
+    attributes:
+      subject: "order"
+  subscriber:
+    ref:
+      apiVersion: serving.knative.dev/v1
+      kind: Service
+      name: order-service
+    uri: /orders/confirm

@@ -48,11 +48,11 @@ type OrderDetails struct {
 	OrderStatus         OrderStatus `json:"order_status"`
 }
 
-func (od OrderDetails) SendTo(topic string) {
+func (od OrderDetails) SendTo(subject string) {
 	saramaConfig := sarama.NewConfig()
 	saramaConfig.Version = sarama.V2_0_0_0
 
-	sender, err := kafka_sarama.NewSender([]string{"my-cluster-kafka-bootstrap.kafka:9092"}, saramaConfig, topic)
+	sender, err := kafka_sarama.NewSender([]string{"my-cluster-kafka-bootstrap.kafka:9092"}, saramaConfig, "create-order")
 	if err != nil {
 		log.Fatalf("failed to create protocol: %s", err.Error())
 	}
@@ -68,6 +68,7 @@ func (od OrderDetails) SendTo(topic string) {
 	e.SetID(uuid.New().String())
 	e.SetType(od.OrderStatus.String())
 	e.SetSource("http://localhost")
+	e.SetSubject(subject)
 	if err = e.SetData(cloudevents.ApplicationJSON, od); err != nil {
 		log.Fatalf("failed to set data: %s", err)
 	}
